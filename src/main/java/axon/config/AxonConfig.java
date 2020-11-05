@@ -12,12 +12,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AxonConfig {
     @Bean
-    public EventStorageEngine eventStore() {
+    public EventStorageEngine inMemoryEventStore() {
         return new InMemoryEventStorageEngine();
     }
 
     @Bean
-    public EventSourcingRepository<OrderAggregate> orderAggregateEventSourcingRepository(EventStore eventStore) {
-        return EventSourcingRepository.builder(OrderAggregate.class).eventStore(eventStore).build();
+    public EventSourcingRepository<OrderAggregate> orderAggregateEventSourcingRepository(EventStore inMemoryEventStore) {
+        return EventSourcingRepository.builder(OrderAggregate.class).eventStore(inMemoryEventStore).build();
     }
 }

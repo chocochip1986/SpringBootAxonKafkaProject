@@ -6,6 +6,7 @@ import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.eventhandling.EventMessage;
 import org.axonframework.extensions.kafka.KafkaProperties;
 import org.axonframework.extensions.kafka.configuration.KafkaMessageSourceConfigurer;
+import org.axonframework.extensions.kafka.eventhandling.DefaultKafkaMessageConverter;
 import org.axonframework.extensions.kafka.eventhandling.KafkaMessageConverter;
 import org.axonframework.extensions.kafka.eventhandling.consumer.ConsumerFactory;
 import org.axonframework.extensions.kafka.eventhandling.consumer.Fetcher;
@@ -13,6 +14,8 @@ import org.axonframework.extensions.kafka.eventhandling.consumer.subscribable.Su
 import org.axonframework.extensions.kafka.eventhandling.producer.ConfirmationMode;
 import org.axonframework.extensions.kafka.eventhandling.producer.DefaultProducerFactory;
 import org.axonframework.extensions.kafka.eventhandling.producer.ProducerFactory;
+import org.axonframework.serialization.json.JacksonSerializer;
+import org.axonframework.serialization.xml.XStreamSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,11 +38,16 @@ public class KafkaConfig {
     }
 
     @Bean
+    public KafkaMessageConverter<String, byte[]> kafkaMessageConverter() {
+        return DefaultKafkaMessageConverter.builder().serializer(JacksonSerializer.builder().build()).build();
+    }
+
+    @Bean
     public SubscribableKafkaMessageSource<String, ByteArray>
     subscribableKafkaMessageSource(KafkaProperties kafkaProperties,
                                    ConsumerFactory consumerFactory,
                                    Fetcher<String, ByteArray, EventMessage> fetcher,
-                                   KafkaMessageConverter<String, ByteArray> kafkaMessageConverter,
+                                   KafkaMessageConverter<String, byte[]> kafkaMessageConverter,
                                    KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer) {
         SubscribableKafkaMessageSource<String, ByteArray> subscribableKafkaMessageSource = SubscribableKafkaMessageSource.builder()
                 .topics(new ArrayList<String>(Collections.singleton("order-topic")))

@@ -34,7 +34,8 @@
         </plugins>
     </build>
     <properties>
-        <springframework.version>2.3.4.RELEASE</springframework.version>
+        <springframework.version>2.3.3.RELEASE</springframework.version>
+        <spring.kafka.version>2.5.5</spring.kafka.version>
     </properties>
 
     <dependencies>
@@ -64,10 +65,17 @@
 <!--            <version>5.4.1</version>-->
 <!--        </dependency>-->
 
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.security</groupId>-->
+<!--            <artifactId>spring-security-config</artifactId>-->
+<!--            <version>5.4.1</version>-->
+<!--        </dependency>-->
+
+        <!-- https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka -->
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-config</artifactId>
-            <version>5.4.1</version>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>${springframework.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
