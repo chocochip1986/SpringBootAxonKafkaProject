@@ -6,6 +6,7 @@ import org.apache.kafka.common.internals.Topic;
 import org.axonframework.config.Configurer;
 import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.eventhandling.EventMessage;
+import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.extensions.kafka.KafkaProperties;
 import org.axonframework.extensions.kafka.configuration.KafkaMessageSourceConfigurer;
 import org.axonframework.extensions.kafka.eventhandling.DefaultKafkaMessageConverter;
@@ -91,6 +92,7 @@ public class KafkaConfig {
                 .consumerFactory(consumerFactory)
                 .fetcher(fetcher)
                 .messageConverter(kafkaMessageConverter)
+                .consumerCount(10)
                 .build();
         kafkaMessageSourceConfigurer.registerSubscribableSource(configuration -> subscribableKafkaMessageSource);
 
@@ -105,19 +107,14 @@ public class KafkaConfig {
     }
 
     @Autowired
-    public void configureSubscribableKafkaSource(EventProcessingConfigurer eventProcessingConfigurer,
-                                                 SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource) {
-        eventProcessingConfigurer.registerSubscribingEventProcessor(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP, configuration -> subscribableKafkaMessageSource );
-    }
-
-    @Autowired
     public void registerPublisherToEventProcessor(EventProcessingConfigurer eventProcessingConfigurer,
-                                                  KafkaEventPublisher<String,byte[]> kafkaEventPublisher) {
+                                                  KafkaEventPublisher<String,byte[]> kafkaEventPublisher,
+                                                  SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource) {
         eventProcessingConfigurer
                 .registerEventHandler(configuration -> kafkaEventPublisher)
                 .assignHandlerTypesMatching(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP,
                         clazz -> clazz.isAssignableFrom(KafkaEventPublisher.class))
-                .registerSubscribingEventProcessor(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP);
+                .registerSubscribingEventProcessor(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP, configuration -> subscribableKafkaMessageSource );
     }
 
     //PRODUCER RELATED BEANS

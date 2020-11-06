@@ -29,7 +29,7 @@ public class OrderAggregate {
 
     @CommandHandler
     public OrderAggregate(CreateOrderCommand cmd) {
-        apply(new OrderCreatedEvent(cmd.getOrderName(), cmd.getPrice()));
+        apply(new OrderCreatedEvent(cmd.getUuid(), cmd.getOrderName(), cmd.getPrice()));
     }
 
     @CommandHandler
