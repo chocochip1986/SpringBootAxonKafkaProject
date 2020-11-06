@@ -16,6 +16,8 @@ import org.axonframework.extensions.kafka.eventhandling.consumer.Fetcher;
 import org.axonframework.extensions.kafka.eventhandling.consumer.subscribable.SubscribableKafkaMessageSource;
 import org.axonframework.extensions.kafka.eventhandling.producer.ConfirmationMode;
 import org.axonframework.extensions.kafka.eventhandling.producer.DefaultProducerFactory;
+import org.axonframework.extensions.kafka.eventhandling.producer.KafkaEventPublisher;
+import org.axonframework.extensions.kafka.eventhandling.producer.KafkaPublisher;
 import org.axonframework.extensions.kafka.eventhandling.producer.ProducerFactory;
 import org.axonframework.serialization.json.JacksonSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,9 +98,26 @@ public class KafkaConfig {
     }
 
     @Autowired
+    public void useJacksonSerializer(Configurer configurer) {
+        JacksonSerializer jacksonSerializer = JacksonSerializer.builder().build();
+        configurer.configureEventSerializer(configuration -> jacksonSerializer)
+                .configureMessageSerializer(configuration -> jacksonSerializer);
+    }
+
+    @Autowired
     public void configureSubscribableKafkaSource(EventProcessingConfigurer eventProcessingConfigurer,
                                                  SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource) {
-        eventProcessingConfigurer.registerSubscribingEventProcessor("kafka-group", configuration -> subscribableKafkaMessageSource );
+        eventProcessingConfigurer.registerSubscribingEventProcessor(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP, configuration -> subscribableKafkaMessageSource );
+    }
+
+    @Autowired
+    public void registerPublisherToEventProcessor(EventProcessingConfigurer eventProcessingConfigurer,
+                                                  KafkaEventPublisher<String,byte[]> kafkaEventPublisher) {
+        eventProcessingConfigurer
+                .registerEventHandler(configuration -> kafkaEventPublisher)
+                .assignHandlerTypesMatching(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP,
+                        clazz -> clazz.isAssignableFrom(KafkaEventPublisher.class))
+                .registerSubscribingEventProcessor(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP);
     }
 
     //PRODUCER RELATED BEANS
@@ -108,6 +127,30 @@ public class KafkaConfig {
                 .configuration(kafkaProperties.buildProducerProperties())
                 .producerCacheSize(10000)
                 .confirmationMode(ConfirmationMode.WAIT_FOR_ACK)
+                .build();
+    }
+
+    //AXON's KAFKA PUBLISHER
+    //This is responsible for pushing events to a Kafka Topic
+    //To achieve this it will utilize a Kafka Producer, retrieved through Axon's ProducerFactory.
+    // The KafkaPublisher in turn receives the events to publish from a KafkaEventPublisher
+    //It seems like it's 1 KafkaPublisher to 1 Topic
+    @Bean
+    public KafkaPublisher<String, byte[]> kafkaPublisher(ProducerFactory<String, byte[]> producerFactory,
+                                                         KafkaMessageConverter<String, byte[]> kafkaMessageConverter) {
+        return KafkaPublisher.<String, byte[]>builder()
+                .topic(defaultTopic)
+                .producerFactory(producerFactory)
+                .messageConverter(kafkaMessageConverter)
+                .build();
+
+    }
+
+    //KAFKA EVENT PUBLISHER
+    @Bean
+    public KafkaEventPublisher<String, byte[]> kafkaEventPublisher(KafkaPublisher<String, byte[]> kafkaPublisher) {
+        return KafkaEventPublisher.<String, byte[]>builder()
+                .kafkaPublisher(kafkaPublisher)
                 .build();
     }
 }

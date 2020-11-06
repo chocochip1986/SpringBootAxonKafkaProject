@@ -1,4 +1,4 @@
-package axon.config;
+package axon.config.axon;
 
 import axon.aggregate.OrderAggregate;
 import org.axonframework.eventsourcing.EventSourcingRepository;
