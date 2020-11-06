@@ -1,6 +1,8 @@
-package axon.config;
+package axon.config.kafka;
 
 import javassist.bytecode.ByteArray;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.common.internals.Topic;
 import org.axonframework.config.Configurer;
 import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.eventhandling.EventMessage;
@@ -21,8 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.kafka.config.TopicBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
@@ -35,6 +39,11 @@ public class KafkaConfig {
 
     @Value(value = "${axon.kafka.default-topic}")
     private String defaultTopic;
+
+    @Bean
+    public NewTopic topic() {
+        return TopicBuilder.name(defaultTopic).build();
+    }
 
     @Bean
     @Primary
@@ -51,14 +60,10 @@ public class KafkaConfig {
 
     //CONSUMER RELATED BEANS
     @Bean
-    public KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer() {
-        return new KafkaMessageSourceConfigurer();
-    }
-
-    @Autowired
-    public void registerKafkaMessageSourceConfigurer(Configurer configurer,
-                                                     KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer) {
+    public KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer(Configurer configurer) {
+        KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer = new KafkaMessageSourceConfigurer();
         configurer.registerModule(kafkaMessageSourceConfigurer);
+        return kafkaMessageSourceConfigurer;
     }
 
     @Bean
@@ -72,14 +77,14 @@ public class KafkaConfig {
     }
 
     @Bean
-    public SubscribableKafkaMessageSource<String, ByteArray>
+    public SubscribableKafkaMessageSource<String, byte[]>
     subscribableKafkaMessageSource(KafkaProperties kafkaProperties,
-                                   ConsumerFactory consumerFactory,
-                                   Fetcher<String, ByteArray, EventMessage> fetcher,
+                                   ConsumerFactory<String, byte[]> consumerFactory,
+                                   Fetcher<String, byte[], EventMessage<?>> fetcher,
                                    KafkaMessageConverter<String, byte[]> kafkaMessageConverter,
                                    KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer) {
-        SubscribableKafkaMessageSource<String, ByteArray> subscribableKafkaMessageSource = SubscribableKafkaMessageSource.builder()
-                .topics(new ArrayList<String>(Collections.singleton("order-topic")))
+        SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource = SubscribableKafkaMessageSource.<String, byte[]>builder()
+                .topics(Arrays.asList(kafkaProperties.getDefaultTopic()))
                 .groupId("group-id")
                 .consumerFactory(consumerFactory)
                 .fetcher(fetcher)
@@ -92,7 +97,7 @@ public class KafkaConfig {
 
     @Autowired
     public void configureSubscribableKafkaSource(EventProcessingConfigurer eventProcessingConfigurer,
-                                                 SubscribableKafkaMessageSource<String, ByteArray> subscribableKafkaMessageSource) {
+                                                 SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource) {
         eventProcessingConfigurer.registerSubscribingEventProcessor("kafka-group", configuration -> subscribableKafkaMessageSource );
     }
 
