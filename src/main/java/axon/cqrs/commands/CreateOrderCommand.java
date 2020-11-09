@@ -21,5 +21,6 @@ public class CreateOrderCommand {
         this.uuid = UUID.randomUUID();
         this.orderName = orderName;
         this.price = price;
+        System.out.println("Creating order with UUID: "+uuid.toString());
     }
 }
