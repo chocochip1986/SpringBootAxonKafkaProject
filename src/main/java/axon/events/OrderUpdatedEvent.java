@@ -11,7 +11,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderUpdatedEvent {
-    @TargetAggregateIdentifier
     private UUID uuid;
     private String orderName;
     private double price;

@@ -2,21 +2,41 @@ package axon.services;
 
 import axon.aggregate.OrderAggregate;
 import axon.cqrs.query.GetOrderAggregateQuery;
+import axon.cqrs.query.dto.OrderAggregateEventsDto;
+import org.axonframework.eventsourcing.eventstore.DomainEventStream;
+import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderQueryService {
     @Autowired
     QueryGateway queryGateway;
 
+    @Autowired
+    EventStore storageEngine;
+
     public OrderAggregate getOrder(GetOrderAggregateQuery query) throws ExecutionException, InterruptedException {
         return queryGateway.query(query, OrderAggregate.class).get();
+    }
+
+    public List<OrderAggregateEventsDto> listEventsOfOrder(GetOrderAggregateQuery query) {
+        DomainEventStream domainEventStream = storageEngine.readEvents(query.getUuid().toString());
+        List<OrderAggregateEventsDto> events = domainEventStream.asStream()
+                .map(domainEventMessage -> OrderAggregateEventsDto.builder()
+                        .name(domainEventMessage.getPayloadType().getName())
+                        .payload(domainEventMessage.getPayload().toString())
+                        .sequenceNumber(domainEventMessage.getSequenceNumber())
+                        .timestamp(domainEventMessage.getTimestamp())
+                        .build())
+                .collect(Collectors.toList());
+        return events;
     }
 }

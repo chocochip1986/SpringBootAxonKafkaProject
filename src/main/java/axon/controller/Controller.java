@@ -50,7 +50,7 @@ public class Controller {
     }
 
     @GetMapping(value = "/order/{uuid}")
-    public ResponseEntity<String> getOrder(@PathVariable("uuid") String uuidString) throws ExecutionException, InterruptedException {
+    public ResponseEntity<String> getOrder(@PathVariable("uuid") String uuidString) {
         UUID uuid = UUID.fromString(uuidString);
         GetOrderAggregateQuery query = new GetOrderAggregateQuery(uuid);
         OrderAggregate orderAggregate;
@@ -60,5 +60,11 @@ public class Controller {
             return new ResponseEntity<String>("JIALAT", HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(orderAggregate.toString(), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/order/list-events/{uuid}")
+    public ResponseEntity<String> getEventsOfOrder(@PathVariable("uuid") String uuidString) {
+        UUID uuid = UUID.fromString(uuidString);
+        return new ResponseEntity<>(orderQueryService.listEventsOfOrder(new GetOrderAggregateQuery(uuid)).toString(), HttpStatus.OK );
     }
 }
