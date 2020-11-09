@@ -16,15 +16,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Configuration
 public class AxonConfig {
     @Bean
-    public EmbeddedEventStore eventStore(EventStorageEngine storageEngine, AxonConfiguration axonConfiguration) {
-        return EmbeddedEventStore.builder()
+    public EmbeddedEventStore eventStore(EventStorageEngine storageEngine,
+                                         AxonConfiguration axonConfiguration,
+                                         EventMessageDispatchInterceptor eventMessageDispatchInterceptor) {
+        EmbeddedEventStore embeddedEventStore =  EmbeddedEventStore.builder()
                 .storageEngine(storageEngine)
                 .messageMonitor(axonConfiguration.messageMonitor(EventStore.class, "eventStore"))
                 .build();
+        embeddedEventStore.registerDispatchInterceptor(eventMessageDispatchInterceptor);
+        return embeddedEventStore;
     }
 
     @Bean
@@ -41,7 +48,8 @@ public class AxonConfig {
     }
 
     @Bean
-    public CommandGateway commandGateway(CommandMessageInterceptor commandMessageInterceptor, CommandBus commandBus) {
+    public CommandGateway commandGateway(CommandMessageInterceptor commandMessageInterceptor,
+                                         CommandBus commandBus) {
         return CommandGatewayFactory.builder()
                 .commandBus(commandBus)
                 .dispatchInterceptors(commandMessageInterceptor)

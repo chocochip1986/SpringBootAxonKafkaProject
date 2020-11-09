@@ -82,14 +82,14 @@ public class KafkaConfig {
     @Bean
     public SubscribableKafkaMessageSource<String, byte[]>
     subscribableKafkaMessageSource(KafkaProperties kafkaProperties,
-                                   ConsumerFactory<String, byte[]> consumerFactory,
+                                   ConsumerFactory<String, byte[]> consumerAxonFactory,
                                    Fetcher<String, byte[], EventMessage<?>> fetcher,
                                    KafkaMessageConverter<String, byte[]> kafkaMessageConverter,
                                    KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer) {
         SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource = SubscribableKafkaMessageSource.<String, byte[]>builder()
                 .topics(Arrays.asList(kafkaProperties.getDefaultTopic()))
                 .groupId("group-id")
-                .consumerFactory(consumerFactory)
+                .consumerFactory(consumerAxonFactory)
                 .fetcher(fetcher)
                 .messageConverter(kafkaMessageConverter)
                 .consumerCount(10)
