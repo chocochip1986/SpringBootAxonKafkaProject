@@ -4,6 +4,7 @@ import axon.aggregate.OrderAggregate;
 import axon.cqrs.query.GetOrderAggregateQuery;
 import axon.dtos.CreateOrderAggregateDto;
 import axon.dtos.UpdateOrderAggregateDto;
+import axon.projections.OrderAggregateProjection;
 import axon.services.OrderCommandService;
 import axon.services.OrderQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,7 @@ public class Controller {
     public ResponseEntity<String> getOrder(@PathVariable("uuid") String uuidString) {
         UUID uuid = UUID.fromString(uuidString);
         GetOrderAggregateQuery query = new GetOrderAggregateQuery(uuid);
-        OrderAggregate orderAggregate;
+        OrderAggregateProjection orderAggregate;
         try {
             orderAggregate = orderQueryService.getOrder(query);
         } catch (ExecutionException | InterruptedException e) {

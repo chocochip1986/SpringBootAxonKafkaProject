@@ -1,20 +1,14 @@
 package axon.projections;
 
-import axon.aggregate.OrderAggregate;
-import axon.cqrs.query.GetOrderAggregateQuery;
-import org.axonframework.eventsourcing.EventSourcingRepository;
-import org.axonframework.queryhandling.QueryHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import lombok.Data;
+import java.util.HashMap;
+import java.util.UUID;
 
-@Component
+@Data
 public class OrderAggregateProjection {
-    @Autowired
-    EventSourcingRepository<OrderAggregate> orderAggregateEventSourcingRepository;
+    private UUID uuid;
+    private String orderName;
+    private double price;
 
-
-    @QueryHandler
-    public OrderAggregate handle(GetOrderAggregateQuery query) {
-        return orderAggregateEventSourcingRepository.load(query.getUuid().toString()).getWrappedAggregate().getAggregateRoot();
-    }
+    private HashMap<UUID, Double> orderTransactions;
 }

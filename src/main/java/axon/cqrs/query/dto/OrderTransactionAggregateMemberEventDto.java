@@ -1,0 +1,17 @@
+package axon.cqrs.query.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class OrderTransactionAggregateMemberEventDto {
+    private UUID transactionId;
+    private double amount;
+}

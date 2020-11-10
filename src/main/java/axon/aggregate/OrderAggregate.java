@@ -1,8 +1,10 @@
 package axon.aggregate;
 
+import axon.aggregate.members.OrderTransaction;
 import axon.cqrs.commands.CreateOrderCommand;
 import axon.cqrs.commands.UpdateOrderCommand;
 import axon.events.OrderCreatedEvent;
+import axon.events.OrderTransactionCreatedEvent;
 import axon.events.OrderUpdatedEvent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,10 +12,14 @@ import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
+import org.axonframework.modelling.command.AggregateMember;
 import org.axonframework.modelling.command.AggregateVersion;
 import org.axonframework.spring.stereotype.Aggregate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
@@ -31,9 +37,20 @@ public class OrderAggregate {
     private String orderName;
     private double price;
 
+    @AggregateMember
+    private List<OrderTransaction> orderTransactions;
+
     @CommandHandler
     public OrderAggregate(CreateOrderCommand cmd) {
-        apply(new OrderCreatedEvent(cmd.getUuid(), cmd.getOrderName(), cmd.getPrice()));
+        orderTransactions = new ArrayList<>();
+        List<OrderTransactionCreatedEvent> transactionCreatedEvents = cmd.getOrderTransactionsCmd()
+                .stream()
+                .map(orderTransactionCommand -> OrderTransactionCreatedEvent.builder()
+                        .uuid(orderTransactionCommand.getTransactionId())
+                        .amount(orderTransactionCommand.getAmount())
+                        .build())
+                .collect(Collectors.toList());
+        apply(new OrderCreatedEvent(cmd.getUuid(), cmd.getOrderName(), cmd.getPrice(), transactionCreatedEvents));
     }
 
     @CommandHandler
@@ -46,6 +63,14 @@ public class OrderAggregate {
         this.uuid = event.getUuid();
         this.orderName = event.getOrderName();
         this.price = event.getPrice();
+
+        orderTransactions.addAll(
+                event.getTransactionEvents().stream()
+                        .map(orderTransactionCreatedEvent -> {
+                            return new OrderTransaction(orderTransactionCreatedEvent.getUuid(), orderTransactionCreatedEvent.getAmount());
+                        })
+                        .collect(Collectors.toList())
+        );
     }
 
     @EventSourcingHandler

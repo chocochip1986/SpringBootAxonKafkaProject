@@ -2,13 +2,17 @@ package axon.services;
 
 import axon.aggregate.OrderAggregate;
 import axon.cqrs.commands.CreateOrderCommand;
+import axon.cqrs.commands.CreateOrderTransactionCommand;
 import axon.cqrs.commands.UpdateOrderCommand;
 import axon.dtos.CreateOrderAggregateDto;
+import axon.dtos.CreateOrderTransactionAggregateMemberDto;
 import axon.dtos.UpdateOrderAggregateDto;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -17,7 +21,16 @@ public class OrderCommandService {
     private CommandGateway commandGateway;
 
     public CompletableFuture<OrderAggregate> createOrder(CreateOrderAggregateDto dto) {
-        return this.commandGateway.send(new CreateOrderCommand(dto.getOrderName(), dto.getPrice()));
+        List<CreateOrderTransactionCommand> cmds = new ArrayList<>();
+        for(CreateOrderTransactionAggregateMemberDto createOrderTransaction : dto.getOrderTransactions()) {
+            cmds.add(
+                    new CreateOrderTransactionCommand(createOrderTransaction.getAmount()));
+        }
+        return this.commandGateway.send(
+                new CreateOrderCommand(
+                        dto.getOrderName(),
+                        dto.getPrice(),
+                        cmds));
     }
 
     public CompletableFuture<OrderAggregate> updateOrder(UpdateOrderAggregateDto dto) {

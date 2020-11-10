@@ -3,11 +3,13 @@ package axon.services;
 import axon.aggregate.OrderAggregate;
 import axon.cqrs.query.GetOrderAggregateQuery;
 import axon.cqrs.query.dto.OrderAggregateEventsDto;
+import axon.projections.OrderAggregateProjection;
 import org.axonframework.eventsourcing.eventstore.DomainEventStream;
+import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.queryhandling.QueryGateway;
+import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,8 +25,11 @@ public class OrderQueryService {
     @Autowired
     EventStore storageEngine;
 
-    public OrderAggregate getOrder(GetOrderAggregateQuery query) throws ExecutionException, InterruptedException {
-        return queryGateway.query(query, OrderAggregate.class).get();
+    @Autowired
+    EmbeddedEventStore eventStore;
+
+    public OrderAggregateProjection getOrder(GetOrderAggregateQuery query) throws ExecutionException, InterruptedException {
+        return queryGateway.query(query, OrderAggregateProjection.class).get();
     }
 
     public List<OrderAggregateEventsDto> listEventsOfOrder(GetOrderAggregateQuery query) {
@@ -38,5 +43,10 @@ public class OrderQueryService {
                         .build())
                 .collect(Collectors.toList());
         return events;
+    }
+
+    @QueryHandler
+    public OrderAggregateProjection retrieveOrderAggregate(GetOrderAggregateQuery query) {
+        return null;
     }
 }

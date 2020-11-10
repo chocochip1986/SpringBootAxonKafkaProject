@@ -1,8 +1,10 @@
 package axon.events;
 
+import axon.aggregate.members.OrderTransaction;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -11,9 +13,13 @@ public class OrderCreatedEvent {
     private UUID uuid;
     private String orderName;
     private double price;
-    public OrderCreatedEvent(UUID uuid, String orderName, double price) {
+
+    private List<OrderTransactionCreatedEvent> transactionEvents;
+
+    public OrderCreatedEvent(UUID uuid, String orderName, double price, List<OrderTransactionCreatedEvent> events) {
         this.uuid = uuid;
         this.orderName = orderName;
         this.price = price;
+        transactionEvents = events;
     }
 }
