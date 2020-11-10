@@ -1,20 +1,15 @@
 package axon.dtos;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateOrderAggregateDto {
+public class UpdateOrderTransactionAggregateMemberDto {
     private UUID uuid;
-    private String orderName;
-    private double price;
-
-    private List<UpdateOrderTransactionAggregateMemberDto> orderTransactions;
+    private double amount;
 }

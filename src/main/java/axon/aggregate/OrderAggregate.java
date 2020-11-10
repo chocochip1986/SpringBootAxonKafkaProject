@@ -5,6 +5,7 @@ import axon.cqrs.commands.CreateOrderCommand;
 import axon.cqrs.commands.UpdateOrderCommand;
 import axon.events.OrderCreatedEvent;
 import axon.events.OrderTransactionCreatedEvent;
+import axon.events.OrderTransactionUpdatedEvent;
 import axon.events.OrderUpdatedEvent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -58,7 +59,11 @@ public class OrderAggregate {
 
     @CommandHandler
     public void updateOrderAggregate(UpdateOrderCommand cmd) {
-        apply(new OrderUpdatedEvent(cmd.getUuid(), cmd.getOrderName(), cmd.getPrice()));
+        List<OrderTransactionUpdatedEvent> transactionUpdatedEvents = cmd.getOrderTransactionCommands()
+                .stream()
+                .map(updateOrderTransactionCommand -> new OrderTransactionUpdatedEvent(updateOrderTransactionCommand.getTransactionId(), updateOrderTransactionCommand.getAmount()))
+                .collect(Collectors.toList());
+        apply(new OrderUpdatedEvent(cmd.getUuid(), cmd.getOrderName(), cmd.getPrice(), transactionUpdatedEvents));
     }
 
     @EventSourcingHandler
@@ -80,5 +85,11 @@ public class OrderAggregate {
     public void on(OrderUpdatedEvent event) {
         this.orderName = event.getOrderName();
         this.price = event.getPrice();
+
+        orderTransactions = new ArrayList<>(){{
+            addAll(event.getTransactionEvents().stream().map(orderTransactionUpdatedEvent -> {
+                return new OrderTransaction(orderTransactionUpdatedEvent.getUuid(), orderTransactionUpdatedEvent.getAmount());
+            }).collect(Collectors.toList()));
+        }};
     }
 }

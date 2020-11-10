@@ -4,9 +4,11 @@ import axon.aggregate.OrderAggregate;
 import axon.cqrs.commands.CreateOrderCommand;
 import axon.cqrs.commands.CreateOrderTransactionCommand;
 import axon.cqrs.commands.UpdateOrderCommand;
+import axon.cqrs.commands.UpdateOrderTransactionCommand;
 import axon.dtos.CreateOrderAggregateDto;
 import axon.dtos.CreateOrderTransactionAggregateMemberDto;
 import axon.dtos.UpdateOrderAggregateDto;
+import axon.dtos.UpdateOrderTransactionAggregateMemberDto;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,11 @@ public class OrderCommandService {
     }
 
     public CompletableFuture<OrderAggregate> updateOrder(UpdateOrderAggregateDto dto) {
-        return this.commandGateway.send(new UpdateOrderCommand(dto.getUuid(), dto.getOrderName(), dto.getPrice()));
+        List<UpdateOrderTransactionCommand> cmds = new ArrayList<>();
+        for(UpdateOrderTransactionAggregateMemberDto updateOrderTransaction : dto.getOrderTransactionDtos()) {
+            cmds.add(
+                    new UpdateOrderTransactionCommand(updateOrderTransaction.getUuid(), updateOrderTransaction.getAmount()));
+        }
+        return this.commandGateway.send(new UpdateOrderCommand(dto.getUuid(), dto.getOrderName(), dto.getPrice(), cmds));
     }
 }
