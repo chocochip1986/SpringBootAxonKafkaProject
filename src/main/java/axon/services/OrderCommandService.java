@@ -37,7 +37,7 @@ public class OrderCommandService {
 
     public CompletableFuture<OrderAggregate> updateOrder(UpdateOrderAggregateDto dto) {
         List<UpdateOrderTransactionCommand> cmds = new ArrayList<>();
-        for(UpdateOrderTransactionAggregateMemberDto updateOrderTransaction : dto.getOrderTransactionDtos()) {
+        for(UpdateOrderTransactionAggregateMemberDto updateOrderTransaction : dto.getOrderTransactions()) {
             cmds.add(
                     new UpdateOrderTransactionCommand(updateOrderTransaction.getUuid(), updateOrderTransaction.getAmount()));
         }
