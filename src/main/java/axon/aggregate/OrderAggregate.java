@@ -25,7 +25,6 @@ import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 @Aggregate
 public class OrderAggregate {
 
@@ -39,6 +38,10 @@ public class OrderAggregate {
 
     @AggregateMember
     private List<OrderTransaction> orderTransactions;
+
+    public OrderAggregate() {
+        orderTransactions = new ArrayList<>();
+    }
 
     @CommandHandler
     public OrderAggregate(CreateOrderCommand cmd) {

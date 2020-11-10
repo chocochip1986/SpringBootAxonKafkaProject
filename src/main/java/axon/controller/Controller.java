@@ -54,7 +54,7 @@ public class Controller {
     public ResponseEntity<String> getOrder(@PathVariable("uuid") String uuidString) {
         UUID uuid = UUID.fromString(uuidString);
         GetOrderAggregateQuery query = new GetOrderAggregateQuery(uuid);
-        OrderAggregateProjection orderAggregate;
+        OrderAggregate orderAggregate;
         try {
             orderAggregate = orderQueryService.getOrder(query);
         } catch (ExecutionException | InterruptedException e) {

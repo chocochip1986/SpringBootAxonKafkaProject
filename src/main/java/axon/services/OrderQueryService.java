@@ -28,8 +28,8 @@ public class OrderQueryService {
     @Autowired
     EmbeddedEventStore eventStore;
 
-    public OrderAggregateProjection getOrder(GetOrderAggregateQuery query) throws ExecutionException, InterruptedException {
-        return queryGateway.query(query, OrderAggregateProjection.class).get();
+    public OrderAggregate getOrder(GetOrderAggregateQuery query) throws ExecutionException, InterruptedException {
+        return queryGateway.query(query, OrderAggregate.class).get();
     }
 
     public List<OrderAggregateEventsDto> listEventsOfOrder(GetOrderAggregateQuery query) {
@@ -43,10 +43,5 @@ public class OrderQueryService {
                         .build())
                 .collect(Collectors.toList());
         return events;
-    }
-
-    @QueryHandler
-    public OrderAggregateProjection retrieveOrderAggregate(GetOrderAggregateQuery query) {
-        return null;
     }
 }
