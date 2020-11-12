@@ -9,7 +9,6 @@ import axon.events.OrderTransactionUpdatedEvent;
 import axon.events.OrderUpdatedEvent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -61,9 +60,13 @@ public class OrderAggregate {
     public void updateOrderAggregate(UpdateOrderCommand cmd) {
         List<OrderTransactionUpdatedEvent> transactionUpdatedEvents = cmd.getOrderTransactionCommands()
                 .stream()
-                .map(updateOrderTransactionCommand -> new OrderTransactionUpdatedEvent(updateOrderTransactionCommand.getTransactionId(), updateOrderTransactionCommand.getAmount()))
+                .map(updateOrderTransactionCommand -> new OrderTransactionUpdatedEvent(updateOrderTransactionCommand.getAmount()))
                 .collect(Collectors.toList());
-        apply(new OrderUpdatedEvent(cmd.getUuid(), cmd.getOrderName(), cmd.getPrice(), transactionUpdatedEvents));
+        apply(new OrderUpdatedEvent(cmd.getUuid(), cmd.getOrderName(), cmd.getPrice()));
+
+        for(OrderTransactionUpdatedEvent event : transactionUpdatedEvents) {
+            apply(event);
+        }
     }
 
     @EventSourcingHandler
@@ -85,11 +88,5 @@ public class OrderAggregate {
     public void on(OrderUpdatedEvent event) {
         this.orderName = event.getOrderName();
         this.price = event.getPrice();
-
-        orderTransactions = new ArrayList<>(){{
-            addAll(event.getTransactionEvents().stream().map(orderTransactionUpdatedEvent -> {
-                return new OrderTransaction(orderTransactionUpdatedEvent.getUuid(), orderTransactionUpdatedEvent.getAmount());
-            }).collect(Collectors.toList()));
-        }};
     }
 }

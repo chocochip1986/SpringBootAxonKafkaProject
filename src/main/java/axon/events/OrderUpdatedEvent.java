@@ -15,6 +15,4 @@ public class OrderUpdatedEvent {
     private UUID uuid;
     private String orderName;
     private double price;
-
-    private List<OrderTransactionUpdatedEvent> transactionEvents;
 }

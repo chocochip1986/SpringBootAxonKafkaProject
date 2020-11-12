@@ -10,6 +10,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderTransactionUpdatedEvent {
-    private UUID uuid;
+//    private UUID uuid;
     private double amount;
 }
