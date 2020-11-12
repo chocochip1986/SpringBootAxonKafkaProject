@@ -3,10 +3,12 @@ package axon.services;
 import axon.aggregate.OrderAggregate;
 import axon.cqrs.commands.CreateOrderCommand;
 import axon.cqrs.commands.CreateOrderTransactionCommand;
+import axon.cqrs.commands.UpdateOnlyOrderTransactionCommand;
 import axon.cqrs.commands.UpdateOrderCommand;
 import axon.cqrs.commands.UpdateOrderTransactionCommand;
 import axon.dtos.CreateOrderAggregateDto;
 import axon.dtos.CreateOrderTransactionAggregateMemberDto;
+import axon.dtos.UpdateOnlyOrderTransactionAggregateMemberDto;
 import axon.dtos.UpdateOrderAggregateDto;
 import axon.dtos.UpdateOrderTransactionAggregateMemberDto;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -42,5 +44,9 @@ public class OrderCommandService {
                     new UpdateOrderTransactionCommand(updateOrderTransaction.getUuid(), updateOrderTransaction.getAmount()));
         }
         return this.commandGateway.send(new UpdateOrderCommand(dto.getUuid(), dto.getOrderName(), dto.getPrice(), cmds));
+    }
+
+    public CompletableFuture<OrderAggregate> updateOrderTransaction(UpdateOnlyOrderTransactionAggregateMemberDto dto) {
+        return this.commandGateway.send(new UpdateOnlyOrderTransactionCommand(dto.getOrderUuid(), dto.getOrderTransactionUuid(), dto.getAmount()));
     }
 }

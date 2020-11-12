@@ -1,5 +1,6 @@
 package axon.aggregate.members;
 
+import axon.cqrs.commands.UpdateOnlyOrderTransactionCommand;
 import axon.cqrs.commands.UpdateOrderTransactionCommand;
 import axon.events.OrderTransactionUpdatedEvent;
 import lombok.AllArgsConstructor;
@@ -28,7 +29,7 @@ public class OrderTransaction {
     }
 
     @CommandHandler
-    public void handle(UpdateOrderTransactionCommand cmd) {
+    public void handle(UpdateOnlyOrderTransactionCommand cmd) {
         apply(new OrderTransactionUpdatedEvent(cmd.getAmount()));
     }
 

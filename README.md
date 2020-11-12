@@ -15,3 +15,5 @@ To create an Order, run a Post call with the following payload (example)
 
 You can find out the uuid of the order via console log
 
+What you can do
+======================================

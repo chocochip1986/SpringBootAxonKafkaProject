@@ -3,7 +3,9 @@ package axon.controller;
 import axon.aggregate.OrderAggregate;
 import axon.cqrs.query.GetOrderAggregateQuery;
 import axon.dtos.CreateOrderAggregateDto;
+import axon.dtos.UpdateOnlyOrderTransactionAggregateMemberDto;
 import axon.dtos.UpdateOrderAggregateDto;
+import axon.dtos.UpdateOrderTransactionAggregateMemberDto;
 import axon.projections.OrderAggregateProjection;
 import axon.services.OrderCommandService;
 import axon.services.OrderQueryService;
@@ -67,5 +69,10 @@ public class Controller {
     public ResponseEntity<String> getEventsOfOrder(@PathVariable("uuid") String uuidString) {
         UUID uuid = UUID.fromString(uuidString);
         return new ResponseEntity<>(orderQueryService.listEventsOfOrder(new GetOrderAggregateQuery(uuid)).toString(), HttpStatus.OK );
+    }
+
+    @PutMapping(value = "/order/transaction")
+    public ResponseEntity<String> updateOrderTransaction(@RequestBody UpdateOnlyOrderTransactionAggregateMemberDto dto) {
+        return new ResponseEntity<>(orderCommandService.updateOrderTransaction(dto).toString(), HttpStatus.OK);
     }
 }
