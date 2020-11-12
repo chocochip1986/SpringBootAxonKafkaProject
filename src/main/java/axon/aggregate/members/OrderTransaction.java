@@ -1,7 +1,9 @@
 package axon.aggregate.members;
 
+import axon.cqrs.commands.CreateOnlyOrderTransactionCommand;
 import axon.cqrs.commands.UpdateOnlyOrderTransactionCommand;
 import axon.cqrs.commands.UpdateOrderTransactionCommand;
+import axon.events.OrderTransactionCreatedEvent;
 import axon.events.OrderTransactionUpdatedEvent;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,17 +26,17 @@ public class OrderTransaction {
     private UUID transactionId;
     private double amount;
 
-    public OrderTransaction(double amount) {
-        this.amount = amount;
-    }
-
     @CommandHandler
     public void handle(UpdateOnlyOrderTransactionCommand cmd) {
-        apply(new OrderTransactionUpdatedEvent(cmd.getAmount()));
+        apply(new OrderTransactionUpdatedEvent(cmd.getTransactionId(), cmd.getAmount()));
     }
 
+    //The event sourcing handler in the entity performs a validation check whether the received event actually belongs to the entity.
+    //This is necessary as events applied by one entity instance will also be handled by any other entity instance of the same type.
     @EventSourcingHandler
     public void on(OrderTransactionUpdatedEvent event) {
-        this.amount = event.getAmount();
+        if(this.transactionId.equals(event.getUuid())) {
+            this.amount = event.getAmount();
+        }
     }
 }

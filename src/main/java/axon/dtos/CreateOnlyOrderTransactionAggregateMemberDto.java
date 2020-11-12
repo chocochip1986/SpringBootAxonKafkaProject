@@ -1,4 +1,4 @@
-package axon.events;
+package axon.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderTransactionUpdatedEvent {
-    private UUID uuid;
+public class CreateOnlyOrderTransactionAggregateMemberDto {
+    private UUID orderUuid;
     private double amount;
 }

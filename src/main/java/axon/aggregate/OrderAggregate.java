@@ -1,6 +1,7 @@
 package axon.aggregate;
 
 import axon.aggregate.members.OrderTransaction;
+import axon.cqrs.commands.CreateOnlyOrderTransactionCommand;
 import axon.cqrs.commands.CreateOrderCommand;
 import axon.cqrs.commands.UpdateOrderCommand;
 import axon.events.OrderCreatedEvent;
@@ -60,13 +61,20 @@ public class OrderAggregate {
     public void updateOrderAggregate(UpdateOrderCommand cmd) {
         List<OrderTransactionUpdatedEvent> transactionUpdatedEvents = cmd.getOrderTransactionCommands()
                 .stream()
-                .map(updateOrderTransactionCommand -> new OrderTransactionUpdatedEvent(updateOrderTransactionCommand.getAmount()))
+                .map(updateOrderTransactionCommand -> new OrderTransactionUpdatedEvent(updateOrderTransactionCommand.getTransactionId(), updateOrderTransactionCommand.getAmount()))
                 .collect(Collectors.toList());
         apply(new OrderUpdatedEvent(cmd.getUuid(), cmd.getOrderName(), cmd.getPrice()));
 
         for(OrderTransactionUpdatedEvent event : transactionUpdatedEvents) {
             apply(event);
         }
+    }
+
+    //The creation of the Entity takes place in an event sourcing handler of it's parent.
+    //It is thus not possible to have a 'command handling constructor' on the entity class as with the aggregate root.
+    @CommandHandler
+    public void createOrderTransaction(CreateOnlyOrderTransactionCommand cmd) {
+        apply(OrderTransactionCreatedEvent.builder().uuid(cmd.getTransactionId()).amount(cmd.getAmount()).build());
     }
 
     @EventSourcingHandler
@@ -88,5 +96,10 @@ public class OrderAggregate {
     public void on(OrderUpdatedEvent event) {
         this.orderName = event.getOrderName();
         this.price = event.getPrice();
+    }
+
+    @EventSourcingHandler
+    public void on(OrderTransactionCreatedEvent event) {
+        orderTransactions.add(OrderTransaction.builder().transactionId(event.getUuid()).amount(event.getAmount()).build());
     }
 }
