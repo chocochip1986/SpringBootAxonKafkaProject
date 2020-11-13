@@ -76,4 +76,12 @@ http://localhost:9998/api/v1/shootme/order/transaction
 
 #**Explanation of the various components**
 ---
- 
+* **AxonConfig** 
+    - There's plenty of shit in here. I won't be covering the basic ones.
+    * How does Axon consume messages externally published?
+        * SubscribableKafkaMessageSource - This bean is required if you want Axon to consume messages that are published outside of Axon.
+    * How does Axon publish messages for Kafka consumers external to Axon to eat?
+        * When events are being published to an Event Bus/Event Store, Axon can forward them to a Kafka topic via the KafkaPublisher
+        * ProducerFactory - Based on this bean's configuration, Axon will instantiate Producers to publish events to a Topic. Kafka also has its own ProducerFactory library so becareful of where you import yours. You need the one from Axon.
+        * KafkaPublisher - This bean is required to push messages to a Kafka Topic. You'll need to declare a ProducerFactory bean.
+        * KafkaEventPublisher - Essentially, I think this bean operates like a event handler which will push the events down to the KafkaPublisher. That's why you need to set a KafkaPublisher in the bean.
