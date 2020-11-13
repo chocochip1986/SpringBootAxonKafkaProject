@@ -90,7 +90,14 @@ http://localhost:9998/api/v1/shootme/order/transaction
         * If you are not using Axon Server, you'll need to declare a ```EmbeddedEventStore``` bean. This bean houses the Storage Engine. 
     * How then should I query and retrieve the events of the Aggregate?
         * It isn't encouraged to ```Autowire``` and read directly from either the ```EventStorageEngine``` or the ```EmbeddedEventStore```. You will need to create a ```EventSourcingRepository``` bean. Through this bean, you get your events. 
-        
+
+#**FAQS?**
+---
+When do I use an Aggregate Member or an Aggregate?
+* There isn't a definitive answer to this but here are some considerations:
+    * Your Aggregate Member is processing more commands than your Aggregate.
+    * When an Aggregate Member is processing a command, the Aggregate Root is locked to prevent concurrent access. 
+
 #**Questions I have yet to find answers**
 * How does deletion of Aggregate Instances work?
 * Can I display a list of unique Aggregate Instances?
