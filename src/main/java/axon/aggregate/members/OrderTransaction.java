@@ -1,9 +1,6 @@
 package axon.aggregate.members;
 
-import axon.cqrs.commands.CreateOnlyOrderTransactionCommand;
 import axon.cqrs.commands.UpdateOnlyOrderTransactionCommand;
-import axon.cqrs.commands.UpdateOrderTransactionCommand;
-import axon.events.OrderTransactionCreatedEvent;
 import axon.events.OrderTransactionUpdatedEvent;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
