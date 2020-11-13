@@ -85,3 +85,7 @@ http://localhost:9998/api/v1/shootme/order/transaction
         * ProducerFactory - Based on this bean's configuration, Axon will instantiate Producers to publish events to a Topic. Kafka also has its own ProducerFactory library so becareful of where you import yours. You need the one from Axon.
         * KafkaPublisher - This bean is required to push messages to a Kafka Topic. You'll need to declare a ProducerFactory bean.
         * KafkaEventPublisher - Essentially, I think this bean operates like a event handler which will push the events down to the KafkaPublisher. That's why you need to set a KafkaPublisher in the bean.
+        
+#**Questions I have yet to find answers**
+* How does deletion of Aggregate Instances work?
+* Can I display a list of unique Aggregate Instances?
