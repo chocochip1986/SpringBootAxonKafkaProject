@@ -78,6 +78,8 @@ http://localhost:9998/api/v1/shootme/order/transaction
 ---
 * **AxonConfig** 
     - There's plenty of shit in here. I won't be covering the basic ones.
+    * How are the Commands pushed to the command handlers?
+        * In this project, I used the ```CommandGateway```. But in it, a ```CommandBus``` is the thing that dispatches the commands to their respective command handlers.
     * How does Axon consume messages externally published?
         * ```SubscribableKafkaMessageSource``` - This bean is required if you want Axon to consume messages that are published outside of Axon.
     * How does Axon publish messages for Kafka consumers external to Axon to eat?
