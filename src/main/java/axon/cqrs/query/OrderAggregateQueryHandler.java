@@ -1,7 +1,7 @@
 package axon.cqrs.query;
 
 
-import axon.aggregate.OrderAggregate;
+import axon.aggregate.order.OrderAggregate;
 import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.beans.factory.annotation.Autowired;

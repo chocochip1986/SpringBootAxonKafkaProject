@@ -1,4 +1,4 @@
-package axon.aggregate.members;
+package axon.aggregate.order.members.members;
 
 import axon.cqrs.commands.UpdateOnlyOrderTransactionCommand;
 import axon.events.OrderTransactionUpdatedEvent;

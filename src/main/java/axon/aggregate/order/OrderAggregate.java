@@ -1,6 +1,6 @@
-package axon.aggregate;
+package axon.aggregate.order;
 
-import axon.aggregate.members.OrderTransaction;
+import axon.aggregate.order.members.members.OrderTransaction;
 import axon.cqrs.commands.CreateOnlyOrderTransactionCommand;
 import axon.cqrs.commands.CreateOrderCommand;
 import axon.cqrs.commands.UpdateOrderCommand;

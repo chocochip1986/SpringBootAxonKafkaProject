@@ -1,6 +1,5 @@
 package axon.events;
 
-import axon.aggregate.members.OrderTransaction;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

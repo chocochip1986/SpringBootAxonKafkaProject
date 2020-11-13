@@ -1,14 +1,11 @@
 package axon.controller;
 
-import axon.aggregate.OrderAggregate;
+import axon.aggregate.order.OrderAggregate;
 import axon.cqrs.query.GetOrderAggregateQuery;
 import axon.dtos.CreateOnlyOrderTransactionAggregateMemberDto;
 import axon.dtos.CreateOrderAggregateDto;
-import axon.dtos.CreateOrderTransactionAggregateMemberDto;
 import axon.dtos.UpdateOnlyOrderTransactionAggregateMemberDto;
 import axon.dtos.UpdateOrderAggregateDto;
-import axon.dtos.UpdateOrderTransactionAggregateMemberDto;
-import axon.projections.OrderAggregateProjection;
 import axon.services.OrderCommandService;
 import axon.services.OrderQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @RestController

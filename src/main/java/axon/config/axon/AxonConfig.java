@@ -1,6 +1,6 @@
 package axon.config.axon;
 
-import axon.aggregate.OrderAggregate;
+import axon.aggregate.order.OrderAggregate;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.gateway.CommandGatewayFactory;
