@@ -89,7 +89,10 @@ http://localhost:9998/api/v1/shootme/order/transaction
         * You need an implementation of the ```EventStorageEngine``` class. In this project, I use the In-Memory Storage Engine (```InMemoryEventStorageEngine```) for simple testing. There are other persistent implementations of it.
         * If you are not using Axon Server, you'll need to declare a ```EmbeddedEventStore``` bean. This bean houses the Storage Engine. 
     * How then should I query and retrieve the events of the Aggregate?
-        * It isn't encouraged to ```Autowire``` and read directly from either the ```EventStorageEngine``` or the ```EmbeddedEventStore```. You will need to create a ```EventSourcingRepository``` bean. Through this bean, you get your events. 
+        * It isn't encouraged to ```Autowire``` and read directly from either the ```EventStorageEngine``` or the ```EmbeddedEventStore```. You will need to create a ```EventSourcingRepository``` bean. Through this bean, you get your events.
+        
+#**Further explorations**
+* Snapshotting Events of an Aggregate to reduce performance degradation of a long living Aggregate. 
 
 #**FAQS?**
 ---
