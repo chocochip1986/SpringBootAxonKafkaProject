@@ -1,5 +1,7 @@
 package axon.config.axon;
 
+import axon.aggregate.item.ItemAggregate;
+import axon.aggregate.item.WeaponAggregate;
 import axon.aggregate.order.OrderAggregate;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -28,6 +30,7 @@ import org.axonframework.extensions.kafka.eventhandling.producer.ProducerFactory
 import org.axonframework.serialization.json.JacksonSerializer;
 import org.axonframework.spring.config.AxonConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,28 +50,55 @@ public class AxonConfig {
     @Value(value = "${axon.kafka.default-topic}")
     private String defaultTopic;
 
-    @Bean
-    public EmbeddedEventStore eventStore(EventStorageEngine storageEngine,
+    @Bean("OrderEventStore")
+    @Primary
+    public EmbeddedEventStore orderEventStore(@Qualifier("OrderStorageEngine") EventStorageEngine orderStorageEngine,
                                          AxonConfiguration axonConfiguration,
                                          EventMessageDispatchInterceptor eventMessageDispatchInterceptor) {
         EmbeddedEventStore embeddedEventStore =  EmbeddedEventStore.builder()
-                .storageEngine(storageEngine)
+                .storageEngine(orderStorageEngine)
                 .messageMonitor(axonConfiguration.messageMonitor(EventStore.class, "eventStore"))
                 .build();
         embeddedEventStore.registerDispatchInterceptor(eventMessageDispatchInterceptor);
         return embeddedEventStore;
     }
 
-    @Bean
-    public EventStorageEngine storageEngine() {
+    @Bean("ItemEventStore")
+    public EmbeddedEventStore itemEventStore(@Qualifier("ItemStorageEngine") EventStorageEngine itemStorageEngine,
+                                         AxonConfiguration axonConfiguration,
+                                         EventMessageDispatchInterceptor eventMessageDispatchInterceptor) {
+        EmbeddedEventStore embeddedEventStore =  EmbeddedEventStore.builder()
+                .storageEngine(itemStorageEngine)
+                .messageMonitor(axonConfiguration.messageMonitor(EventStore.class, "eventStore"))
+                .build();
+        embeddedEventStore.registerDispatchInterceptor(eventMessageDispatchInterceptor);
+        return embeddedEventStore;
+    }
+
+    @Bean("OrderStorageEngine")
+    @Primary
+    public EventStorageEngine orderStorageEngine() {
+        return new InMemoryEventStorageEngine();
+    }
+
+    @Bean("ItemStorageEngine")
+    public EventStorageEngine itemStorageEngine() {
         return new InMemoryEventStorageEngine();
     }
 
     @Bean
-    public EventSourcingRepository<OrderAggregate> orderAggregateEventSourcingRepository(EventStore eventStore) {
+    public EventSourcingRepository<OrderAggregate> orderAggregateEventSourcingRepository(@Qualifier("OrderEventStore") EventStore orderEventStore) {
         return EventSourcingRepository
                 .builder(OrderAggregate.class)
-                .eventStore(eventStore)
+                .eventStore(orderEventStore)
+                .build();
+    }
+
+    @Bean
+    public EventSourcingRepository<WeaponAggregate> itemAggregateEventSourcingRepository(@Qualifier("ItemEventStore") EventStore itemEventStore) {
+        return EventSourcingRepository
+                .builder(WeaponAggregate.class)
+                .eventStore(itemEventStore)
                 .build();
     }
 

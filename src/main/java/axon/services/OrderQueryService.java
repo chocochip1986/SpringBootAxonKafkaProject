@@ -4,10 +4,10 @@ import axon.aggregate.order.OrderAggregate;
 import axon.cqrs.query.GetOrderAggregateQuery;
 import axon.cqrs.query.dto.OrderAggregateEventsDto;
 import org.axonframework.eventsourcing.eventstore.DomainEventStream;
-import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
-import org.axonframework.eventsourcing.eventstore.EventStore;
+import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,19 +19,17 @@ public class OrderQueryService {
     @Autowired
     QueryGateway queryGateway;
 
+    @Qualifier("OrderStorageEngine")
     @Autowired
-    EventStore storageEngine;
-
-    @Autowired
-    EmbeddedEventStore eventStore;
+    EventStorageEngine orderStorageEngine;
 
     public OrderAggregate getOrder(GetOrderAggregateQuery query) throws ExecutionException, InterruptedException {
         return queryGateway.query(query, OrderAggregate.class).get();
     }
 
     public List<OrderAggregateEventsDto> listEventsOfOrder(GetOrderAggregateQuery query) {
-        DomainEventStream domainEventStream = storageEngine.readEvents(query.getUuid().toString());
-        List<OrderAggregateEventsDto> events = domainEventStream.asStream()
+        DomainEventStream domainEventStream = orderStorageEngine.readEvents(query.getUuid().toString());
+        return domainEventStream.asStream()
                 .map(domainEventMessage -> OrderAggregateEventsDto.builder()
                         .name(domainEventMessage.getPayloadType().getName())
                         .payload(domainEventMessage.getPayload().toString())
@@ -39,6 +37,5 @@ public class OrderQueryService {
                         .timestamp(domainEventMessage.getTimestamp())
                         .build())
                 .collect(Collectors.toList());
-        return events;
     }
 }

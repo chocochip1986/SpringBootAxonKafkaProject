@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateVersion;
+import org.axonframework.spring.stereotype.Aggregate;
+
 import java.util.UUID;
 
 @Data
