@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import javax.annotation.PostConstruct;
 import java.util.TimeZone;
 
-@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
+@SpringBootApplication
 public class SpringBootAxonKafkaApplication {
     @PostConstruct
     public void init() {

@@ -8,6 +8,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
 
 auth:
   userinfoUrl: https://auth-qa.cpfb.gds-gov.tech/auth/realms/CDS-LOCAL/protocol/openid-connect/userinfo
