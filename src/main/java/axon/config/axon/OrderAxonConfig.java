@@ -1,7 +1,5 @@
 package axon.config.axon;
 
-import axon.aggregate.item.ItemAggregate;
-import axon.aggregate.item.WeaponAggregate;
 import axon.aggregate.order.OrderAggregate;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -40,7 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 @Configuration
-public class AxonConfig {
+public class OrderAxonConfig {
     @Value(value = "${axon.kafka.bootstrap-servers}")
     private String bootstrapAddress;
 
@@ -63,26 +61,9 @@ public class AxonConfig {
         return embeddedEventStore;
     }
 
-    @Bean("ItemEventStore")
-    public EmbeddedEventStore itemEventStore(@Qualifier("ItemStorageEngine") EventStorageEngine itemStorageEngine,
-                                         AxonConfiguration axonConfiguration,
-                                         EventMessageDispatchInterceptor eventMessageDispatchInterceptor) {
-        EmbeddedEventStore embeddedEventStore =  EmbeddedEventStore.builder()
-                .storageEngine(itemStorageEngine)
-                .messageMonitor(axonConfiguration.messageMonitor(EventStore.class, "eventStore"))
-                .build();
-        embeddedEventStore.registerDispatchInterceptor(eventMessageDispatchInterceptor);
-        return embeddedEventStore;
-    }
-
     @Bean("OrderStorageEngine")
     @Primary
     public EventStorageEngine orderStorageEngine() {
-        return new InMemoryEventStorageEngine();
-    }
-
-    @Bean("ItemStorageEngine")
-    public EventStorageEngine itemStorageEngine() {
         return new InMemoryEventStorageEngine();
     }
 
@@ -91,14 +72,6 @@ public class AxonConfig {
         return EventSourcingRepository
                 .builder(OrderAggregate.class)
                 .eventStore(orderEventStore)
-                .build();
-    }
-
-    @Bean
-    public EventSourcingRepository<WeaponAggregate> itemAggregateEventSourcingRepository(@Qualifier("ItemEventStore") EventStore itemEventStore) {
-        return EventSourcingRepository
-                .builder(WeaponAggregate.class)
-                .eventStore(itemEventStore)
                 .build();
     }
 
