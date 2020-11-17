@@ -52,5 +52,5 @@ public class ItemAxonConfig {
                 .builder(WeaponAggregate.class)
                 .eventStore(itemEventStore)
                 .build();
-    }g
+    }
 }
