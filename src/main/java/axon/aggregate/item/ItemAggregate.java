@@ -5,13 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateVersion;
-import org.axonframework.spring.stereotype.Aggregate;
 
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+//@MappedSuperclass
 public abstract class ItemAggregate {
     @AggregateIdentifier
     protected UUID uuid;

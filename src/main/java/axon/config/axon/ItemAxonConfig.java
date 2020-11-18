@@ -9,7 +9,7 @@ import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.eventsourcing.eventstore.jpa.JpaEventStorageEngine;
-import org.axonframework.serialization.Serializer;
+import org.axonframework.serialization.json.JacksonSerializer;
 import org.axonframework.spring.config.AxonConfiguration;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -30,19 +30,18 @@ public class ItemAxonConfig {
     }
 
     @Bean("ItemStorageEngine")
-    public EventStorageEngine itemStorageEngine(Serializer serializer,
-                                                PersistenceExceptionResolver persistenceExceptionResolver,
-                                                Serializer eventSerializer,
+    public EventStorageEngine itemStorageEngine(PersistenceExceptionResolver persistenceExceptionResolver,
                                                 AxonConfiguration configuration,
                                                 EntityManagerProvider entityManagerProvider,
                                                 TransactionManager transactionManager) {
+        JacksonSerializer jacksonSerializer = JacksonSerializer.builder().build();
         return JpaEventStorageEngine.builder()
                 .entityManagerProvider(entityManagerProvider)
                 .transactionManager(transactionManager)
-                .eventSerializer(eventSerializer)
+                .eventSerializer(jacksonSerializer)
                 .persistenceExceptionResolver(persistenceExceptionResolver)
                 .upcasterChain(configuration.upcasterChain())
-                .snapshotSerializer(serializer)
+                .snapshotSerializer(jacksonSerializer)
                 .build();
     }
 
@@ -53,4 +52,16 @@ public class ItemAxonConfig {
                 .eventStore(itemEventStore)
                 .build();
     }
+
+//    @PersistenceUnit(name = "eventStore")
+//    @Bean
+//    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource,
+//                                                                       EntityManagerFactoryBuilder builder) {
+//        return builder
+//                .dataSource(dataSource)
+//                .packages(DomainEventEntry.class, SnapshotEventEntry.class)
+//                .packages("org.axonframework.eventhandling.tokenstore.jpa", "org.axonframework.eventsourcing.eventstore.jpa")
+//                .persistenceUnit("eventStore")
+//                .build();
+//    }
 }
