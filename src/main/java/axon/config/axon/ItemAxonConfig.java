@@ -1,19 +1,22 @@
 package axon.config.axon;
 
 import axon.aggregate.item.WeaponAggregate;
-import org.axonframework.common.jdbc.PersistenceExceptionResolver;
-import org.axonframework.common.jpa.EntityManagerProvider;
+import axon.config.axon.h2db.H2dbEventTableFactory;
+import org.axonframework.common.jdbc.ConnectionProvider;
 import org.axonframework.common.transaction.TransactionManager;
 import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.EventStore;
-import org.axonframework.eventsourcing.eventstore.jpa.JpaEventStorageEngine;
-import org.axonframework.serialization.json.JacksonSerializer;
+import org.axonframework.eventsourcing.eventstore.jdbc.EventSchema;
+import org.axonframework.eventsourcing.eventstore.jdbc.JdbcEventStorageEngine;
 import org.axonframework.spring.config.AxonConfiguration;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.orm.jpa.JpaTransactionManager;
+
+import javax.persistence.EntityManagerFactory;
 
 @Configuration
 public class ItemAxonConfig {
@@ -30,19 +33,16 @@ public class ItemAxonConfig {
     }
 
     @Bean("ItemStorageEngine")
-    public EventStorageEngine itemStorageEngine(PersistenceExceptionResolver persistenceExceptionResolver,
-                                                AxonConfiguration configuration,
-                                                EntityManagerProvider entityManagerProvider,
+    public EventStorageEngine itemStorageEngine(ConnectionProvider connectionProvider,
                                                 TransactionManager transactionManager) {
-        JacksonSerializer jacksonSerializer = JacksonSerializer.builder().build();
-        return JpaEventStorageEngine.builder()
-                .entityManagerProvider(entityManagerProvider)
+        EventSchema eventSchema = new EventSchema.Builder().eventTable("DOMAIN_EVENT_ENTRY").snapshotTable("SNAPSHOT_EVENT_ENTRY").build();
+        JdbcEventStorageEngine engine = JdbcEventStorageEngine.builder()
+                .connectionProvider(connectionProvider)
                 .transactionManager(transactionManager)
-                .eventSerializer(jacksonSerializer)
-                .persistenceExceptionResolver(persistenceExceptionResolver)
-                .upcasterChain(configuration.upcasterChain())
-                .snapshotSerializer(jacksonSerializer)
+                .schema(eventSchema)
                 .build();
+        engine.createSchema(new H2dbEventTableFactory());
+        return engine;
     }
 
     @Bean
@@ -53,15 +53,10 @@ public class ItemAxonConfig {
                 .build();
     }
 
-//    @PersistenceUnit(name = "eventStore")
-//    @Bean
-//    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource,
-//                                                                       EntityManagerFactoryBuilder builder) {
-//        return builder
-//                .dataSource(dataSource)
-//                .packages(DomainEventEntry.class, SnapshotEventEntry.class)
-//                .packages("org.axonframework.eventhandling.tokenstore.jpa", "org.axonframework.eventsourcing.eventstore.jpa")
-//                .persistenceUnit("eventStore")
-//                .build();
-//    }
+    @Bean
+    public JpaTransactionManager jpaTransactionManager(EntityManagerFactory entityManagerFactory) {
+        JpaTransactionManager jpaTransactionManager = new JpaTransactionManager(entityManagerFactory);
+        jpaTransactionManager.afterPropertiesSet();
+        return jpaTransactionManager;
+    }
 }

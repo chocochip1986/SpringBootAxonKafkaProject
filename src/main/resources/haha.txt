@@ -1,0 +1,18 @@
+DROP TABLE IF EXISTS DomainEventEntry;
+DROP TABLE IF EXISTS SnapshotEventEntry;
+
+CREATE TABLE DomainEventEntry (
+globalIndex BIGINT auto_increment NOT NULL,
+aggregateIdentifier VARCHAR(255) NOT NULL,
+sequenceNumber BIGINT NOT NULL,
+type VARCHAR(255),
+eventIdentifier VARCHAR(255) NOT NULL,
+metaData BLOB,
+payload BLOB NOT NULL,
+payloadRevision VARCHAR(255),
+payloadType VARCHAR(255) NOT NULL,
+timeStamp VARCHAR(255) NOT NULL,
+PRIMARY KEY(globalIndex),
+UNIQUE(aggregateIdentifier,sequenceNumber),
+UNIQUE(eventIdentifier)
+);

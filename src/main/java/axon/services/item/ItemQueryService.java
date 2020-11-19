@@ -5,6 +5,7 @@ import axon.cqrs.query.item.GetWeaponAggregateQuery;
 import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
 import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ExecutionException;
@@ -15,6 +16,7 @@ public class ItemQueryService {
     private QueryGateway queryGateway;
 
     @Autowired
+    @Qualifier("ItemEventStore")
     private EmbeddedEventStore itemEventStore;
 
     public WeaponAggregate getWeapon(GetWeaponAggregateQuery query) throws ExecutionException, InterruptedException {

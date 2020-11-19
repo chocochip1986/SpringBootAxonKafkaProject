@@ -1,9 +1,14 @@
 package axon.config.axon;
 
 import axon.aggregate.order.OrderAggregate;
+import axon.config.axon.h2db.H2dbEventTableFactory;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.gateway.CommandGatewayFactory;
+import org.axonframework.common.jdbc.ConnectionProvider;
+import org.axonframework.common.jdbc.PersistenceExceptionResolver;
+import org.axonframework.common.jpa.EntityManagerProvider;
+import org.axonframework.common.transaction.TransactionManager;
 import org.axonframework.config.Configurer;
 import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.eventhandling.EventMessage;
@@ -12,6 +17,9 @@ import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.eventsourcing.eventstore.inmemory.InMemoryEventStorageEngine;
+import org.axonframework.eventsourcing.eventstore.jdbc.EventSchema;
+import org.axonframework.eventsourcing.eventstore.jdbc.JdbcEventStorageEngine;
+import org.axonframework.eventsourcing.eventstore.jpa.JpaEventStorageEngine;
 import org.axonframework.extensions.kafka.KafkaProperties;
 import org.axonframework.extensions.kafka.configuration.KafkaMessageSourceConfigurer;
 import org.axonframework.extensions.kafka.eventhandling.DefaultKafkaMessageConverter;
@@ -61,10 +69,24 @@ public class OrderAxonConfig {
         return embeddedEventStore;
     }
 
+//    @Bean("OrderStorageEngine")
+//    @Primary
+//    public EventStorageEngine orderStorageEngine() {
+//        return new InMemoryEventStorageEngine();
+//    }
+
     @Bean("OrderStorageEngine")
     @Primary
-    public EventStorageEngine orderStorageEngine() {
-        return new InMemoryEventStorageEngine();
+    public EventStorageEngine orderStorageEngine(ConnectionProvider connectionProvider,
+                                                TransactionManager transactionManager) {
+        EventSchema eventSchema = new EventSchema.Builder().eventTable("DOMAIN_EVENT_ENTRY").snapshotTable("SNAPSHOT_EVENT_ENTRY").build();
+        JdbcEventStorageEngine engine = JdbcEventStorageEngine.builder()
+                .connectionProvider(connectionProvider)
+                .transactionManager(transactionManager)
+                .schema(eventSchema)
+                .build();
+        engine.createSchema(new H2dbEventTableFactory());
+        return engine;
     }
 
     @Bean
