@@ -6,24 +6,24 @@ import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.gateway.CommandGatewayFactory;
 import org.axonframework.common.jdbc.ConnectionProvider;
-import org.axonframework.common.jdbc.PersistenceExceptionResolver;
-import org.axonframework.common.jpa.EntityManagerProvider;
 import org.axonframework.common.transaction.TransactionManager;
 import org.axonframework.config.Configurer;
 import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.eventhandling.EventMessage;
+import org.axonframework.eventhandling.SubscribingEventProcessor;
+import org.axonframework.eventsourcing.AggregateFactory;
 import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.EventStore;
-import org.axonframework.eventsourcing.eventstore.inmemory.InMemoryEventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.jdbc.EventSchema;
 import org.axonframework.eventsourcing.eventstore.jdbc.JdbcEventStorageEngine;
-import org.axonframework.eventsourcing.eventstore.jpa.JpaEventStorageEngine;
+import org.axonframework.eventsourcing.eventstore.jdbc.MySqlEventTableFactory;
 import org.axonframework.extensions.kafka.KafkaProperties;
 import org.axonframework.extensions.kafka.configuration.KafkaMessageSourceConfigurer;
 import org.axonframework.extensions.kafka.eventhandling.DefaultKafkaMessageConverter;
 import org.axonframework.extensions.kafka.eventhandling.KafkaMessageConverter;
+import org.axonframework.extensions.kafka.eventhandling.consumer.AsyncFetcher;
 import org.axonframework.extensions.kafka.eventhandling.consumer.ConsumerFactory;
 import org.axonframework.extensions.kafka.eventhandling.consumer.DefaultConsumerFactory;
 import org.axonframework.extensions.kafka.eventhandling.consumer.Fetcher;
@@ -33,6 +33,7 @@ import org.axonframework.extensions.kafka.eventhandling.producer.DefaultProducer
 import org.axonframework.extensions.kafka.eventhandling.producer.KafkaEventPublisher;
 import org.axonframework.extensions.kafka.eventhandling.producer.KafkaPublisher;
 import org.axonframework.extensions.kafka.eventhandling.producer.ProducerFactory;
+import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.json.JacksonSerializer;
 import org.axonframework.spring.config.AxonConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -85,7 +87,7 @@ public class OrderAxonConfig {
                 .transactionManager(transactionManager)
                 .schema(eventSchema)
                 .build();
-        engine.createSchema(new H2dbEventTableFactory());
+        engine.createSchema(new MySqlEventTableFactory());
         return engine;
     }
 
@@ -95,6 +97,11 @@ public class OrderAxonConfig {
                 .builder(OrderAggregate.class)
                 .eventStore(orderEventStore)
                 .build();
+    }
+
+    @Bean
+    public AggregateFactory<OrderAggregate> orderAggregateAggregateFactory(EventSourcingRepository<OrderAggregate> orderAggregateEventSourcingRepository) {
+        return orderAggregateEventSourcingRepository.getAggregateFactory();
     }
 
     @Bean
@@ -122,9 +129,8 @@ public class OrderAxonConfig {
 
     //CONSUMER RELATED BEANS
     @Bean
-    public KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer(Configurer configurer) {
+    public KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer() {
         KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer = new KafkaMessageSourceConfigurer();
-        configurer.registerModule(kafkaMessageSourceConfigurer);
         return kafkaMessageSourceConfigurer;
     }
 
@@ -144,18 +150,27 @@ public class OrderAxonConfig {
                                    ConsumerFactory<String, byte[]> consumerAxonFactory,
                                    Fetcher<String, byte[], EventMessage<?>> fetcher,
                                    KafkaMessageConverter<String, byte[]> kafkaMessageConverter,
-                                   KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer) {
+                                   KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer,
+                                   Configurer configurer) {
         SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource = SubscribableKafkaMessageSource.<String, byte[]>builder()
                 .topics(Arrays.asList(kafkaProperties.getDefaultTopic()))
                 .groupId("group-id")
                 .consumerFactory(consumerAxonFactory)
                 .fetcher(fetcher)
                 .messageConverter(kafkaMessageConverter)
-                .consumerCount(10)
+                .consumerCount(1)
+                .autoStart()
                 .build();
+        subscribableKafkaMessageSource.subscribe();
         kafkaMessageSourceConfigurer.registerSubscribableSource(configuration -> subscribableKafkaMessageSource);
-
+        configurer.registerModule(kafkaMessageSourceConfigurer);
         return subscribableKafkaMessageSource;
+    }
+
+    @Autowired
+    public void configureSubscribableKafkaSource(EventProcessingConfigurer eventProcessingConfigurer,
+                                                 SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource) {
+        eventProcessingConfigurer.registerSubscribingEventProcessor("TEST SUBSCRIBE MSG SOURCE", configuration -> subscribableKafkaMessageSource);
     }
 
     @Autowired
@@ -165,18 +180,16 @@ public class OrderAxonConfig {
                 .configureMessageSerializer(configuration -> jacksonSerializer);
     }
 
+    //PRODUCER RELATED BEANS
     @Autowired
     public void registerPublisherToEventProcessor(EventProcessingConfigurer eventProcessingConfigurer,
-                                                  KafkaEventPublisher<String,byte[]> kafkaEventPublisher,
-                                                  SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource) {
+                                                  KafkaEventPublisher<String,byte[]> kafkaEventPublisher) {
         eventProcessingConfigurer
                 .registerEventHandler(configuration -> kafkaEventPublisher)
                 .assignHandlerTypesMatching(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP,
-                        clazz -> clazz.isAssignableFrom(KafkaEventPublisher.class))
-                .registerSubscribingEventProcessor(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP, configuration -> subscribableKafkaMessageSource );
+                        clazz -> clazz.isAssignableFrom(KafkaEventPublisher.class)).registerSubscribingEventProcessor(KafkaEventPublisher.DEFAULT_PROCESSING_GROUP);
     }
 
-    //PRODUCER RELATED BEANS
     @Bean
     public ProducerFactory<String, byte[]> producerAxonKafkaFactory(KafkaProperties kafkaProperties) {
         return new DefaultProducerFactory.Builder<String, byte[]>()
@@ -195,7 +208,7 @@ public class OrderAxonConfig {
     public KafkaPublisher<String, byte[]> kafkaPublisher(ProducerFactory<String, byte[]> producerFactory,
                                                          KafkaMessageConverter<String, byte[]> kafkaMessageConverter) {
         return KafkaPublisher.<String, byte[]>builder()
-                .topic(defaultTopic)
+                .topic("local.event.2")
                 .producerFactory(producerFactory)
                 .messageConverter(kafkaMessageConverter)
                 .build();

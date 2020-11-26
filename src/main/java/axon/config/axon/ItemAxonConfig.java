@@ -1,17 +1,26 @@
 package axon.config.axon;
 
 import axon.aggregate.item.WeaponAggregate;
+import axon.aggregate.order.OrderAggregate;
 import axon.config.axon.h2db.H2dbEventTableFactory;
 import org.axonframework.common.jdbc.ConnectionProvider;
 import org.axonframework.common.transaction.TransactionManager;
+import org.axonframework.eventsourcing.AggregateFactory;
+import org.axonframework.eventsourcing.AggregateSnapshotter;
+import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition;
 import org.axonframework.eventsourcing.EventSourcingRepository;
+import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
+import org.axonframework.eventsourcing.Snapshotter;
 import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.eventsourcing.eventstore.jdbc.EventSchema;
 import org.axonframework.eventsourcing.eventstore.jdbc.JdbcEventStorageEngine;
+import org.axonframework.eventsourcing.eventstore.jdbc.MySqlEventTableFactory;
 import org.axonframework.spring.config.AxonConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -41,16 +50,24 @@ public class ItemAxonConfig {
                 .transactionManager(transactionManager)
                 .schema(eventSchema)
                 .build();
-        engine.createSchema(new H2dbEventTableFactory());
+        engine.createSchema(new MySqlEventTableFactory());
         return engine;
     }
 
     @Bean
-    public EventSourcingRepository<WeaponAggregate> itemAggregateEventSourcingRepository(@Qualifier("ItemEventStore") EventStore itemEventStore) {
+    public EventSourcingRepository<WeaponAggregate> itemAggregateEventSourcingRepository(@Qualifier("ItemEventStore") EventStore itemEventStore,
+                                                                                         SnapshotTriggerDefinition eventCountSnapshotTriggerDefinition) {
         return EventSourcingRepository
                 .builder(WeaponAggregate.class)
                 .eventStore(itemEventStore)
+                .snapshotTriggerDefinition(eventCountSnapshotTriggerDefinition)
                 .build();
+
+    }
+
+    @Bean
+    public AggregateFactory<WeaponAggregate> weaponAggregateAggregateFactory(EventSourcingRepository<WeaponAggregate> itemAggregateEventSourcingRepository) {
+        return itemAggregateEventSourcingRepository.getAggregateFactory();
     }
 
     @Bean
@@ -58,5 +75,21 @@ public class ItemAxonConfig {
         JpaTransactionManager jpaTransactionManager = new JpaTransactionManager(entityManagerFactory);
         jpaTransactionManager.afterPropertiesSet();
         return jpaTransactionManager;
+    }
+
+    @Bean
+    public EventCountSnapshotTriggerDefinition eventCountSnapshotTriggerDefinition(Snapshotter snapshotter) {
+        return new EventCountSnapshotTriggerDefinition(snapshotter, 1);
+    }
+
+    @Bean
+    @ConditionalOnBean(name = {"weaponAggregateAggregateFactory", "orderAggregateAggregateFactory"})
+    public Snapshotter snapshotter(EmbeddedEventStore paymentConfigurationEventStore,
+                                   AggregateFactory<WeaponAggregate> itemAggregateEventSourcingRepository,
+                                   AggregateFactory<OrderAggregate> orderAggregateAggregateFactory) {
+        return AggregateSnapshotter.builder()
+                .eventStore(paymentConfigurationEventStore)
+                .aggregateFactories(itemAggregateEventSourcingRepository, orderAggregateAggregateFactory)
+                .build();
     }
 }

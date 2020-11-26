@@ -3,36 +3,22 @@ package axon.config.kafka;
 import javassist.bytecode.ByteArray;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.internals.Topic;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.axonframework.config.Configurer;
-import org.axonframework.config.EventProcessingConfigurer;
-import org.axonframework.eventhandling.EventMessage;
-import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
-import org.axonframework.extensions.kafka.KafkaProperties;
-import org.axonframework.extensions.kafka.configuration.KafkaMessageSourceConfigurer;
-import org.axonframework.extensions.kafka.eventhandling.DefaultKafkaMessageConverter;
-import org.axonframework.extensions.kafka.eventhandling.KafkaMessageConverter;
-import org.axonframework.extensions.kafka.eventhandling.consumer.DefaultConsumerFactory;
-import org.axonframework.extensions.kafka.eventhandling.consumer.Fetcher;
-import org.axonframework.extensions.kafka.eventhandling.consumer.subscribable.SubscribableKafkaMessageSource;
-import org.axonframework.extensions.kafka.eventhandling.producer.ConfirmationMode;
-import org.axonframework.extensions.kafka.eventhandling.producer.DefaultProducerFactory;
-import org.axonframework.extensions.kafka.eventhandling.producer.KafkaEventPublisher;
-import org.axonframework.extensions.kafka.eventhandling.producer.KafkaPublisher;
-import org.axonframework.extensions.kafka.eventhandling.producer.ProducerFactory;
-import org.axonframework.serialization.json.JacksonSerializer;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,9 +42,23 @@ public class KafkaConfig {
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<String, Object>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-id");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-id-2");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
         return new DefaultKafkaConsumerFactory<String, String>(props);
+    }
+
+    @Bean
+    public ProducerFactory<String, byte[]> producerFactory() {
+        Map<String, Object> configProps = new HashMap<String, Object>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class);
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    @Bean
+    public KafkaTemplate<String, byte[]> kafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
     }
 }
