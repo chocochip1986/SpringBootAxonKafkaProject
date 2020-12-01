@@ -1,6 +1,7 @@
 package axon.config.axon;
 
 import axon.aggregate.order.OrderAggregate;
+import axon.event_handlers.WeaponAggregateExternalEventHandler;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.gateway.CommandGatewayFactory;
@@ -77,13 +78,12 @@ public class OrderAxonConfig {
     public EventStorageEngine orderStorageEngine(ConnectionProvider connectionProvider,
                                                 TransactionManager transactionManager) {
         EventSchema eventSchema = new EventSchema.Builder().eventTable("DOMAIN_EVENT_ENTRY").snapshotTable("SNAPSHOT_EVENT_ENTRY").build();
-        JacksonSerializer jacksonSerializer = JacksonSerializer.builder().build();
         JdbcEventStorageEngine engine = JdbcEventStorageEngine.builder()
                 .connectionProvider(connectionProvider)
                 .transactionManager(transactionManager)
                 .schema(eventSchema)
-                .eventSerializer(jacksonSerializer)
-                .snapshotSerializer(jacksonSerializer)
+                .snapshotSerializer(JacksonSerializer.defaultSerializer())
+                .eventSerializer(JacksonSerializer.defaultSerializer())
                 .build();
         engine.createSchema(new MySqlEventTableFactory());
         return engine;
@@ -128,8 +128,7 @@ public class OrderAxonConfig {
     //CONSUMER RELATED BEANS
     @Bean
     public KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer() {
-        KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer = new KafkaMessageSourceConfigurer();
-        return kafkaMessageSourceConfigurer;
+        return new KafkaMessageSourceConfigurer();
     }
 
     @Bean
@@ -185,8 +184,11 @@ public class OrderAxonConfig {
 
     @Autowired
     public void configureSubscribableKafkaSource(EventProcessingConfigurer eventProcessingConfigurer,
-                                                 SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource) {
-        eventProcessingConfigurer.registerSubscribingEventProcessor("kafka-subscribing-event-processor", configuration -> subscribableKafkaMessageSource);
+                                                 SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource,
+                                                 WeaponAggregateExternalEventHandler weaponAggregateExternalEventHandler) {
+        eventProcessingConfigurer.registerSubscribingEventProcessor("kafka-subscribing-event-processor", configuration -> subscribableKafkaMessageSource)
+                .assignProcessingGroup("axon.event_handlers", "kafka-subscribing-event-processor")
+        .registerEventHandler(configuration -> weaponAggregateExternalEventHandler);
     }
 
     @Autowired

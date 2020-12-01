@@ -8,6 +8,7 @@ import org.axonframework.eventsourcing.eventstore.jdbc.EventSchema;
 import org.axonframework.eventsourcing.eventstore.jdbc.statements.AppendEventsStatementBuilder;
 import org.axonframework.eventsourcing.eventstore.jdbc.statements.JdbcEventStorageEngineStatements;
 import org.axonframework.serialization.Serializer;
+import org.axonframework.serialization.json.JacksonSerializer;
 import org.axonframework.serialization.xml.XStreamSerializer;
 
 import java.sql.SQLException;
@@ -68,7 +69,7 @@ public class SubscribingKafkaEventProcessor {
         private AppendEventsStatementBuilder appendEventsFunction = JdbcEventStorageEngineStatements::appendEvents;
         private EventSchema eventSchema = null;
         private ConnectionProvider connectionProvider = null;
-        private Serializer serializer = XStreamSerializer.defaultSerializer();
+        private Serializer serializer = JacksonSerializer.defaultSerializer();
 
         public Builder() {
         }

@@ -17,6 +17,7 @@ import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.eventsourcing.eventstore.jdbc.EventSchema;
 import org.axonframework.eventsourcing.eventstore.jdbc.JdbcEventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.jdbc.MySqlEventTableFactory;
+import org.axonframework.serialization.json.JacksonSerializer;
 import org.axonframework.spring.config.AxonConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -49,6 +50,8 @@ public class ItemAxonConfig {
                 .connectionProvider(connectionProvider)
                 .transactionManager(transactionManager)
                 .schema(eventSchema)
+                .snapshotSerializer(JacksonSerializer.defaultSerializer())
+                .eventSerializer(JacksonSerializer.defaultSerializer())
                 .build();
         engine.createSchema(new MySqlEventTableFactory());
         return engine;
