@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Random;
 import java.util.UUID;
 
@@ -29,16 +30,16 @@ public class KafkaController {
         WeaponAggregateCreatedEvent event =
                 WeaponAggregateCreatedEvent.builder()
                         .uuid(UUID.randomUUID())
-                        .damage(32311)
+                        .damage(999)
                         .name("Test")
                         .build();
         RecordHeaders headers = new RecordHeaders();
         headers.add("axon-message-id", UUID.randomUUID().toString().getBytes());
-        headers.add("axon-message-type", WeaponAggregateCreatedEvent.class.toString().getBytes());
+        headers.add("axon-message-type", WeaponAggregateCreatedEvent.class.getName().getBytes());
         headers.add("axon-message-aggregate-id", event.getUuid().toString().getBytes());
         headers.add("axon-message-aggregate-type", WeaponAggregate.class.getName().getBytes());
         headers.add("axon-message-aggregate-seq", ByteBuffer.allocate(Long.BYTES).putLong(0l).array());
-        headers.add("axon-message-timestamp", LocalDateTime.now().toString().getBytes());
+        headers.add("axon-message-timestamp", ZonedDateTime.now().toInstant().toString().getBytes());
 
 
         JacksonSerializer jacksonSerializer = JacksonSerializer.builder().build();
