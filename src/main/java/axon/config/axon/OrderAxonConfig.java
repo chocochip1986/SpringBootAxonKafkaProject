@@ -167,6 +167,7 @@ public class OrderAxonConfig {
                 .fetcher(fetcher)
                 .messageConverter(kafkaMessageConverter)
                 .consumerCount(1)
+                .autoStart()
                 .build();
 
         SubscribingKafkaEventProcessor processor = SubscribingKafkaEventProcessor.Builder()
@@ -238,8 +239,8 @@ public class OrderAxonConfig {
                 .build();
     }
 
-    @Autowired
-    public void startKafkaMessageSourceConfigurer(KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer) {
-        kafkaMessageSourceConfigurer.start();
-    }
+//    @Autowired
+//    public void startKafkaMessageSourceConfigurer(KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer) {
+//        kafkaMessageSourceConfigurer.start();
+//    }
 }
