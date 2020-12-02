@@ -89,8 +89,8 @@ public class ItemAxonConfig {
     }
 
     @Bean
-    public EventGateway itemEventGateway(EventBus itemEventStore) {
-        return DefaultEventGateway.builder().eventBus(itemEventStore).build();
+    public GenericDomainEventGateway itemEventGateway(EventBus itemEventStore) {
+        return GenericDomainEventGateway.builder().eventBus(itemEventStore).build();
     }
 
     @Bean
