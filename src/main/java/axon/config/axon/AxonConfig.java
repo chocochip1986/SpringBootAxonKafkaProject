@@ -8,6 +8,7 @@ import org.axonframework.common.jdbc.ConnectionProvider;
 import org.axonframework.config.Configurer;
 import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.eventhandling.EventMessage;
+import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.eventsourcing.eventstore.jdbc.EventSchema;
 import org.axonframework.eventsourcing.eventstore.jdbc.statements.JdbcEventStorageEngineStatements;
 import org.axonframework.extensions.kafka.KafkaProperties;
@@ -99,7 +100,8 @@ public class AxonConfig {
                                    KafkaMessageSourceConfigurer kafkaMessageSourceConfigurer,
                                    Configurer configurer,
                                    ConnectionProvider connectionProvider,
-                                   EventSchema eventSchema) {
+                                   EventSchema eventSchema,
+                                   EventGateway itemEventGateway) {
         SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource = SubscribableKafkaMessageSource.<String, byte[]>builder()
                 .topics(Arrays.asList(kafkaProperties.getDefaultTopic()))
                 .groupId("group-id")
@@ -116,7 +118,7 @@ public class AxonConfig {
                 .setEventSchema(eventSchema)
                 .build();
 
-        subscribableKafkaMessageSource.subscribe(processor.buildKafkaProcessingFunction());
+//        subscribableKafkaMessageSource.subscribe(processor.buildKafkaProcessingFunction());
 
         kafkaMessageSourceConfigurer.registerSubscribableSource(configuration -> subscribableKafkaMessageSource);
         configurer.registerModule(kafkaMessageSourceConfigurer);
