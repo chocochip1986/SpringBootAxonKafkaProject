@@ -175,7 +175,7 @@ public class OrderAxonConfig {
                 .setEventSchema(eventSchema)
                 .build();
 
-        subscribableKafkaMessageSource.subscribe(processor.buildKafkaProcessingFunction());
+//        subscribableKafkaMessageSource.subscribe(processor.buildKafkaProcessingFunction());
 
         kafkaMessageSourceConfigurer.registerSubscribableSource(configuration -> subscribableKafkaMessageSource);
         configurer.registerModule(kafkaMessageSourceConfigurer);
@@ -187,8 +187,8 @@ public class OrderAxonConfig {
                                                  SubscribableKafkaMessageSource<String, byte[]> subscribableKafkaMessageSource,
                                                  WeaponAggregateExternalEventHandler weaponAggregateExternalEventHandler) {
         eventProcessingConfigurer.registerSubscribingEventProcessor("kafka-subscribing-event-processor", configuration -> subscribableKafkaMessageSource)
-                .assignProcessingGroup("axon.event_handlers", "kafka-subscribing-event-processor")
-        .registerEventHandler(configuration -> weaponAggregateExternalEventHandler);
+                .assignProcessingGroup("axon.event_handlers", "kafka-subscribing-event-processor");
+//        .registerEventHandler(configuration -> weaponAggregateExternalEventHandler);
     }
 
     @Autowired
