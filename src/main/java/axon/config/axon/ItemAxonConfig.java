@@ -5,6 +5,9 @@ import axon.aggregate.order.OrderAggregate;
 import axon.config.axon.h2db.H2dbEventTableFactory;
 import org.axonframework.common.jdbc.ConnectionProvider;
 import org.axonframework.common.transaction.TransactionManager;
+import org.axonframework.eventhandling.EventBus;
+import org.axonframework.eventhandling.gateway.DefaultEventGateway;
+import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.eventsourcing.AggregateFactory;
 import org.axonframework.eventsourcing.AggregateSnapshotter;
 import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition;
@@ -83,6 +86,11 @@ public class ItemAxonConfig {
     @Bean
     public EventCountSnapshotTriggerDefinition eventCountSnapshotTriggerDefinition(Snapshotter snapshotter) {
         return new EventCountSnapshotTriggerDefinition(snapshotter, 1);
+    }
+
+    @Bean
+    public EventGateway itemEventGateway(EventBus itemEventStore, EventMessageDispatchInterceptor eventMessageDispatchInterceptor) {
+        return DefaultEventGateway.builder().eventBus(itemEventStore).dispatchInterceptors(eventMessageDispatchInterceptor).build();
     }
 
     @Bean
